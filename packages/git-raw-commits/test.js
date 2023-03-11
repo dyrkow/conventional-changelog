@@ -230,4 +230,31 @@ describe('git-raw-commits', function () {
           }))
       })
   })
+
+  it('should allow commits to be scoped to a specific set of directories', function (done) {
+    fs.mkdirSync('./packages/common', { recursive: true })
+    writeFileSync('./packages/foo/test1', 'update')
+    exec('git add --all && git commit -m"Fifth commit"')
+    writeFileSync('test2', 'update')
+    exec('git add --all && git commit -m"Sixth commit"')
+    writeFileSync('./packages/common/test1', 'hello')
+    exec('git add --all && git commit -m"Seventh commit"')
+
+    let chunks = []
+    gitRawCommits({
+      path: ['./packages/foo', './packages/common'],
+    })
+      .pipe(through(function (chunk, enc, cb) {
+        chunks.push(chunk.toString())
+        cb()
+      }, function () {
+        expect(chunks).to.have.ordered.members([
+          'Seventh commit\n\n',
+          'Fifth commit\n\n',
+          'Fourth commit\n\n',
+          'First commit\n\n',
+        ])
+        done()
+      }))
+  })
 })

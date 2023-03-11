@@ -33,7 +33,11 @@ function getGitArgs (gitOpts) {
   // allow commits to focus on a single directory
   // this is useful for monorepos.
   if (gitOpts.path) {
-    gitArgs.push('--', gitOpts.path)
+      if (Array.isArray(gitOpts.path)) {
+      gitOpts.path.forEach(path => gitArgs.push('--', path))
+    } else {
+      gitArgs.push('--', gitOpts.path)
+    }
   }
 
   return gitArgs
